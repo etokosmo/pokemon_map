@@ -1,4 +1,5 @@
 import json
+from typing import Optional
 
 import folium
 from django.core.exceptions import ObjectDoesNotExist
@@ -58,8 +59,8 @@ def show_all_pokemons(request):
     })
 
 
-def get_previous_evolution(request, pokemon: Pokemon):
-    """Получаем описание покемона из кого эволюционировали"""
+def get_previous_evolution(request, pokemon: Pokemon) -> Optional[dict]:
+    """Получаем характиристики покемона из кого эволюционировали"""
     if pokemon.previous_evolution:
         return {
             "title_ru": pokemon.previous_evolution.title,
@@ -68,8 +69,8 @@ def get_previous_evolution(request, pokemon: Pokemon):
         }
 
 
-def get_next_evolution(request, requested_pokemon: Pokemon):
-    """Получаем описание покемона в кого эволюционируем"""
+def get_next_evolution(request, requested_pokemon: Pokemon) -> Optional[dict]:
+    """Получаем характиристики покемона в кого эволюционируем"""
     if not requested_pokemon.next_evolutions.all():
         return None
     pokemon = requested_pokemon.next_evolutions.all()[0]
@@ -93,18 +94,7 @@ def show_pokemon(request, pokemon_id):
         "title_jp": requested_pokemon.title_jp,
         "description": requested_pokemon.description,
         "img_url": request.build_absolute_uri(requested_pokemon.image.url),
-        "entities": [
-            {
-                "level": 15,
-                "lat": 55.753244,
-                "lon": 37.628423
-            },
-            {
-                "level": 24,
-                "lat": 55.743244,
-                "lon": 37.635423
-            }
-        ],
+        "entities": [],
         "next_evolution": get_next_evolution(request, requested_pokemon),
         "previous_evolution": get_previous_evolution(request, requested_pokemon)
     }
