@@ -58,7 +58,8 @@ def show_all_pokemons(request):
     })
 
 
-def get_previous_evolution(request, pokemon):
+def get_previous_evolution(request, pokemon: Pokemon):
+    """Получаем описание покемона из кого эволюционировали"""
     if pokemon.previous_evolution:
         return {
             "title_ru": pokemon.previous_evolution.title,
@@ -67,12 +68,24 @@ def get_previous_evolution(request, pokemon):
         }
 
 
+def get_next_evolution(request, requested_pokemon: Pokemon):
+    """Получаем описание покемона в кого эволюционируем"""
+    if not requested_pokemon.next_evolutions.all():
+        return None
+    pokemon = requested_pokemon.next_evolutions.all()[0]
+    return {
+        "title_ru": pokemon.title,
+        "pokemon_id": pokemon.id,
+        "img_url": request.build_absolute_uri(pokemon.image.url)
+    }
+
+
 def show_pokemon(request, pokemon_id):
     try:
         requested_pokemon = Pokemon.objects.get(id=int(pokemon_id))
     except ObjectDoesNotExist:
         return HttpResponseNotFound('<h1>Такой покемон не найден</h1>')
-
+    
     pokemon = {
         "pokemon_id": requested_pokemon.id,
         "title_ru": requested_pokemon.title,
@@ -92,11 +105,7 @@ def show_pokemon(request, pokemon_id):
                 "lon": 37.635423
             }
         ],
-        # "next_evolution": {
-        #     "title_ru": "Венузавр",
-        #     "pokemon_id": 3,
-        #     "img_url": "https://vignette.wikia.nocookie.net/pokemon/images/a/ae/003Venusaur.png/revision/latest/scale-to-width-down/200?cb=20150703175822&path-prefix=ru"
-        # },
+        "next_evolution": get_next_evolution(request, requested_pokemon),
         "previous_evolution": get_previous_evolution(request, requested_pokemon)
     }
 
