@@ -4,9 +4,9 @@ from django.db import models
 class Pokemon(models.Model):
     """Покемон"""
     title = models.CharField(verbose_name='наименование', max_length=200)
-    title_en = models.CharField(verbose_name='наименование на английском', max_length=200, null=True, blank=True)
-    title_jp = models.CharField(verbose_name='наименование на японском', max_length=200, null=True, blank=True)
-    description = models.TextField(verbose_name='описание', null=True, blank=True)
+    title_en = models.CharField(verbose_name='наименование на английском', max_length=200, blank=True)
+    title_jp = models.CharField(verbose_name='наименование на японском', max_length=200, blank=True)
+    description = models.TextField(verbose_name='описание', blank=True)
     image = models.ImageField(verbose_name='фотография', upload_to='pokemons', null=True, blank=True)
     previous_evolution = models.ForeignKey("self", related_name="next_evolutions", verbose_name='предыдущая эволюция', on_delete=models.SET_NULL, null=True, blank=True)
 
