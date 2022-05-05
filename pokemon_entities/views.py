@@ -1,6 +1,7 @@
 import json
 
 import folium
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpRequest, HttpResponseNotFound
 from django.shortcuts import render
 from django.utils import timezone
@@ -33,7 +34,8 @@ def show_all_pokemons(request):
     # with open('pokemon_entities/pokemons.json', encoding='utf-8') as database:
     #     pokemons = json.load(database)['pokemons']
 
-    pokemons_entity = PokemonEntity.objects.filter(appeared_at__date__lte=now, disappeared_at__date__gte=now)
+    pokemons_entity = PokemonEntity.objects.filter(
+        appeared_at__date__lte=now, disappeared_at__date__gte=now)
 
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
     for pokemon_entity in pokemons_entity:
@@ -59,22 +61,65 @@ def show_all_pokemons(request):
 
 
 def show_pokemon(request, pokemon_id):
-    with open('pokemon_entities/pokemons.json', encoding='utf-8') as database:
-        pokemons = json.load(database)['pokemons']
+    # with open('pokemon_entities/pokemons.json', encoding='utf-8') as database:
+    #     pokemons = json.load(database)['pokemons']
 
-    for pokemon in pokemons:
-        if pokemon['pokemon_id'] == int(pokemon_id):
-            requested_pokemon = pokemon
-            break
-    else:
+    try:
+        requested_pokemon = Pokemon.objects.get(id=int(pokemon_id))
+    except ObjectDoesNotExist:
         return HttpResponseNotFound('<h1>Такой покемон не найден</h1>')
 
+    pokemon = {
+        "pokemon_id": requested_pokemon.id,
+        "title_ru": requested_pokemon.title,
+        # "title_en": "Bulbasaur",
+        # "title_jp": "フシギダネ",
+        # "description": "cтартовый покемон двойного травяного и ядовитого типа из первого поколения и региона Канто. В национальном покедексе под номером 1. На 16 уровне эволюционирует в Ивизавра. Ивизавр на 32 уровне эволюционирует в Венузавра. Наряду с Чармандером и Сквиртлом, Бульбазавр является одним из трёх стартовых покемонов региона Канто.",
+        "img_url": request.build_absolute_uri(requested_pokemon.image.url),
+        "entities": [
+            {
+                "level": 15,
+                "lat": 55.753244,
+                "lon": 37.628423
+            },
+            {
+                "level": 24,
+                "lat": 55.743244,
+                "lon": 37.635423
+            }
+        ],
+        # "next_evolution": {
+        #     "title_ru": "Ивизавр",
+        #     "pokemon_id": 2,
+        #     "img_url": "https://vignette.wikia.nocookie.net/pokemon/images/7/73/002Ivysaur.png/revision/latest/scale-to-width-down/200?cb=20150703180624&path-prefix=ru"
+        # }
+    }
+
+    # for pokemon in pokemons:
+    #     if pokemon['pokemon_id'] == int(pokemon_id):
+    #         requested_pokemon = pokemon
+    #         break
+    # else:
+    #     return HttpResponseNotFound('<h1>Такой покемон не найден</h1>')
+
+    now = timezone.localtime()
+
+    pokemons_entity = PokemonEntity.objects.filter(
+        pokemon=requested_pokemon, appeared_at__date__lte=now, disappeared_at__date__gte=now)
+
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
-    for pokemon_entity in requested_pokemon['entities']:
+    for pokemon_entity in pokemons_entity:
         add_pokemon(
-            folium_map, pokemon_entity['lat'],
-            pokemon_entity['lon'],
-            pokemon['img_url']
+            folium_map, pokemon_entity.lat,
+            pokemon_entity.lon,
+            request.build_absolute_uri(pokemon_entity.pokemon.image.url)
+        )
+        pokemon['entities'].append(
+            {
+                "level": pokemon_entity.level,
+                "lat": pokemon_entity.lat,
+                "lon": pokemon_entity.lon
+            }
         )
 
     return render(request, 'pokemon.html', context={
