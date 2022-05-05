@@ -31,8 +31,6 @@ def add_pokemon(folium_map, lat, lon, image_url=DEFAULT_IMAGE_URL):
 
 def show_all_pokemons(request):
     now = timezone.localtime()
-    # with open('pokemon_entities/pokemons.json', encoding='utf-8') as database:
-    #     pokemons = json.load(database)['pokemons']
 
     pokemons_entity = PokemonEntity.objects.filter(
         appeared_at__date__lte=now, disappeared_at__date__gte=now)
@@ -60,10 +58,16 @@ def show_all_pokemons(request):
     })
 
 
-def show_pokemon(request, pokemon_id):
-    # with open('pokemon_entities/pokemons.json', encoding='utf-8') as database:
-    #     pokemons = json.load(database)['pokemons']
+def get_previous_evolution(request, pokemon):
+    if pokemon.previous_evolution:
+        return {
+            "title_ru": pokemon.previous_evolution.title,
+            "pokemon_id": pokemon.previous_evolution.id,
+            "img_url": request.build_absolute_uri(pokemon.previous_evolution.image.url)
+        }
 
+
+def show_pokemon(request, pokemon_id):
     try:
         requested_pokemon = Pokemon.objects.get(id=int(pokemon_id))
     except ObjectDoesNotExist:
@@ -89,18 +93,12 @@ def show_pokemon(request, pokemon_id):
             }
         ],
         # "next_evolution": {
-        #     "title_ru": "Ивизавр",
-        #     "pokemon_id": 2,
-        #     "img_url": "https://vignette.wikia.nocookie.net/pokemon/images/7/73/002Ivysaur.png/revision/latest/scale-to-width-down/200?cb=20150703180624&path-prefix=ru"
-        # }
+        #     "title_ru": "Венузавр",
+        #     "pokemon_id": 3,
+        #     "img_url": "https://vignette.wikia.nocookie.net/pokemon/images/a/ae/003Venusaur.png/revision/latest/scale-to-width-down/200?cb=20150703175822&path-prefix=ru"
+        # },
+        "previous_evolution": get_previous_evolution(request, requested_pokemon)
     }
-
-    # for pokemon in pokemons:
-    #     if pokemon['pokemon_id'] == int(pokemon_id):
-    #         requested_pokemon = pokemon
-    #         break
-    # else:
-    #     return HttpResponseNotFound('<h1>Такой покемон не найден</h1>')
 
     now = timezone.localtime()
 
