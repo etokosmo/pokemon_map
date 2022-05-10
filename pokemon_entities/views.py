@@ -73,7 +73,7 @@ def get_next_evolution(request, requested_pokemon: Pokemon) -> Optional[dict]:
     """Получаем характиристики покемона в кого эволюционируем"""
     if not requested_pokemon.next_evolutions.all():
         return None
-    pokemon = requested_pokemon.next_evolutions.all().first()
+    pokemon = requested_pokemon.next_evolutions.first()
     return {
         "title_ru": pokemon.title,
         "pokemon_id": pokemon.id,
